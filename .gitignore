@@ -1,0 +1,16 @@
+.DS_store
+
+# Tools
+__pycache__
+.envrc
+.idea
+*.log
+.now
+.terraform
+*tfstate*
+.vagrant
+.vscode
+.venv
+
+# build
+lokal-*.tar.gz

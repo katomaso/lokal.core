@@ -1,0 +1,8 @@
+---
+- name: Backup base
+  ansible.builtin.include_role:
+    name: lokal.core.lokal
+    tasks_from: backup
+  vars:
+    app_domain: "{{mail_domain}}"
+    app_db: "mysql"

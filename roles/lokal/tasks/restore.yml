@@ -1,0 +1,79 @@
+#
+# Restore usage: create roles/your-role/tasks/restore.yml with following content
+#
+# - name: Restore your-app
+#   ansible.builtin.include_role:
+#     name: lokal.core.lokal
+#     tasks_from: restore
+#   vars:
+#     app: your-app
+#     mysql_db: "{{mysql_database_your_app}}"  # to backup MySQL database
+#     postgres_db: "{{postgres_db_your_app}}"  # to backup PostgreSQL database
+
+- name: List possible backup files
+  ansible.builtin.find:
+    paths: "{{backup_root}}/{{app_domain}}"
+    file_type: directory
+  register: available_backups
+
+- name: Get the latest backup
+  ansible.builtin.set_fact:
+    latest_backup: "{{ available_backups.files | sort(attribute='mtime',reverse=true) | first }}"
+
+- name: Fail if there is no backup
+  ansible.builtin.fail:
+    msg: No backup found
+  when: latest_backup is falsy
+
+- name: "Stop {{ app }} service"
+  ansible.builtin.shell:
+    cmd: "docker compose down"
+    chdir: "{{project_root}}/{{app_domain}}"
+  ignore_errors: true
+
+- name: "Restore {{ app_domain }} data from {{ latest_backup.path }}"
+  ansible.builtin.shell:
+    cmd: "tar -xzf {{latest_backup.path}}/files.tgz"
+    chdir: "{{project_root}}/{{app_domain}}"
+  become: true
+
+- name: "Uzip {{app_domain}} MySQL dump file"
+  ansible.builtin.shell:
+    cmd: "zcat {{latest_backup.path}}/mysql.sql.gz > {{project_root}}/lokal/mysql/{{app_db_name}}.sql"
+    chdir: "{{project_root}}/lokal"
+  when: app_db is defined and app_db == "mysql"
+
+- name: "Restore {{app_domain}} MySQL tables"
+  ansible.builtin.shell:
+    cmd: "docker compose exec mysql mysql -u root --password={{mysql_root_password}} -f -e 'source /var/lib/mysql/{{app_db_name}}.sql' {{app_db_name}}"
+    chdir: "{{project_root}}/lokal"
+  when: app_db is defined and app_db == "mysql"
+
+- name: "Delete ucompressed {{app_domain}} MySQL dump file"
+  ansible.builtin.file:
+    path: "{{project_root}}/lokal/mysql/{{app_domain}}.sql"
+    state: "absent"
+  when: app_db is defined and app_db == "mysql"
+
+- name: "Uzip {{app_domain}} PostgreSQL dump file"
+  ansible.builtin.shell:
+    cmd: "zcat {{latest_backup.path}}/mysql.sql.gz > {{project_root}}/lokal/postgres/{{app_db_name}}.sql"
+    chdir: "{{project_root}}/lokal"
+  when: app_db is defined and app_id == "postgres"
+
+- name: "Restore {{app_db_name}} PostgreSQL tables"
+  ansible.builtin.shell:
+    cmd: "docker compose exec postgres pg_restore -U postgres -d {{app_db_name}} /var/lib/postgresql/data/{{app_db_name}}.sql"
+    chdir: "{{project_root}}/lokal"
+  when: app_db is defined and app_id == "postgres"
+
+- name: "Delete ucompressed {{app_domain}} PostgreSQL dump file"
+  ansible.builtin.file:
+    path: "{{project_root}}/lokal/postgres/{{app_domain}}.sql"
+    state: "absent"
+  when: app_db is defined and app_id == "postgres"
+
+- name: "Start {{app_domain}} again"
+  ansible.builtin.shell:
+    cmd: "docker compose up -d"
+    chdir: "{{project_root}}/{{app_domain}}"

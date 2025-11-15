@@ -1,0 +1,7 @@
+---
+- name: Backup users
+  ansible.builtin.include_role:
+    name: lokal.core.lokal
+    tasks_from: backup
+  vars:
+    app: users

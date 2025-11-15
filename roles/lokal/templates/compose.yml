@@ -1,0 +1,225 @@
+networks:
+  traefik:
+    name: traefik
+  mysql:
+    name: mysql
+  prometheus:
+    name: prometheus
+  postgres:
+    name: postgres
+  lokal:
+    name: lokal.core.lokal
+    internal: true
+  minio:
+    name: minio
+
+services:
+  mysql:
+    container_name: "{{mysql_host}}"
+    image: mariadb:{{mariadb_version}}
+    user: "{{uid}}:{{gid}}"  # run the container service as app user (not root)
+    environment:
+      MYSQL_ROOT_PASSWORD: "{{mysql_root_password}}"
+      MARIADB_MYSQL_LOCALHOST_USER: "true"
+    networks:
+    - mysql
+    - lokal
+    healthcheck:
+      test: mysql --protocol tcp -u root --password={{mysql_root_password}} -e "SELECT 1 FROM DUAL" mysql
+      interval: 60s
+      retries: 5
+      start_period: 5s
+      timeout: 1s
+    restart: unless-stopped
+    volumes:
+    - type: bind
+      source: "{{lokal_root}}/mysql/"
+      target: "/var/lib/mysql/"
+
+  postgres:
+    container_name: postgres
+    image: nickblah/postgis:12-bullseye-postgis-3
+    # user: "{{uid}}:{{gid}}"  # needs the postgres user
+    environment:
+      POSTGRES_PASSWORD: "{{postgres_root_password}}"
+      DEFAULT_COLLATION: "{{locale}}"
+      DEFAULT_CTYPE: "{{locale}}"
+    networks:
+    - postgres
+    - lokal
+    restart: unless-stopped
+    volumes:
+    - type: bind
+      source: "{{lokal_root}}/postgres/"
+      target: "/var/lib/postgres/data/"
+
+  minio:
+    image: minio/minio:{{minio_version}}
+    user: "{{uid}}:{{gid}}"  # run the container service as app user (not root)
+#   ports:
+#   - "9000:9000"
+#   - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: {{admin_username}}
+      MINIO_ROOT_PASSWORD: "{{admin_password}}"
+      MC_CONFIG_DIR: /.mc
+    volumes:
+      - type: bind
+        source: "{{lokal_root}}/minio/data"
+        target: "/data"
+      - type: bind
+        source: "{{lokal_root}}/minio/config"
+        target: "/.mc"
+    command: server /data --console-address=":9090"
+    container_name: minio
+    networks:
+    - minio
+    - lokal
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    # no user: "{{uid}}:{{gid}}" because it cannot bind socket /var/run/fail2ban/fail2ban.sock
+    container_name: fail2ban
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+    - traefik
+    cap_add:
+    - NET_ADMIN
+    - NET_RAW
+    volumes:
+    - type: bind
+      source: "{{lokal_root}}/traefik/log/"
+      target: "/var/log/traefik/"
+      read_only: true
+    - type: bind
+      source: "{{lokal_root}}/fail2ban/"
+      target: "/data/"
+
+{% if ssl_use_acme %}
+  dumper:
+    image: ldez/traefik-certs-dumper:v2.8.1
+    container_name: dumper
+    command: file --version v2 --watch --source /data/acme.json --dest /dump --post-hook "sh /hook.sh"
+    restart: unless-stopped
+    user: "{{uid}}:{{gid}}"
+    labels:
+      traefik.enable: false
+    volumes:
+      - type: bind
+        source: "{{lokal_root}}/traefik/acme"
+        target: "/data"
+      - type: bind
+        source: "{{lokal_root}}/traefik/dump"
+        target: "/dump"
+      - type: bind
+        source: "{{project_root}}/.certs"
+        target: "/lokal"
+      - type: bind
+        source: "{{lokal_root}}/dumper/hook.sh"
+        target: "/hook.sh"
+{% endif %}
+
+  traefik:
+    image: "traefik:{{traefik_version}}"
+    container_name: traefik
+    # cannot be simply app_user:app_user because of root:docker privileges on /var/run/docker.sock
+    user: "{{uid}}:{{gid_docker}}"  # run the container service as app user (not root)
+    networks:
+    - traefik
+    ports:
+    - "80:80"
+    - "443:443"
+    # Email ports that cannot be handled by Traefik because of certiface selection (they are not encrypted by default)
+    # - "25:25"  # insecure SMTP
+    # - "143:143"  # insecure IMAP
+    - "587:587"
+    - "465:465"
+    - "993:993"
+    - "110:110"
+    - "995:995"
+    - "4190:4190"
+    - "8448:8448"
+    restart: unless-stopped
+    environment:
+      CERT_RESOLVER: {{cert_resolver}}
+{% if cert_resolver == "dns" and dns_provider == "namecheap" %}
+      NAMECHEAP_API_USER: {{namecheap_api_user}}
+      NAMECHEAP_API_KEY: {{namecheap_api_key}}
+{% endif %}
+    volumes:
+    - type: bind
+      source: "/var/run/docker.sock"
+      target: "/var/run/docker.sock"
+    - type: bind
+      source: "{{lokal_root}}/traefik/log"
+      target: "/var/log"  # used for fail2ban
+    - type: bind
+      source: "{{lokal_root}}/traefik/acme"
+      target: "/acme"
+    - type: bind
+      source: "{{lokal_root}}/traefik/conf"
+      target: "/config"
+{% if not ssl_use_acme %}
+    - type: bind
+      source: "{{project_root}}/.certs/{{domain}}/"
+      target: "/certs/"
+{% endif %}
+    command:
+    - --accessLog=true
+    - --api.insecure=false
+    - --api.dashboard=true
+    - --api.debug=false
+{% if ssl_use_acme %}
+    - --certificatesResolvers.dns.acme.dnsChallenge.delayBeforeCheck=60
+    - --certificatesResolvers.dns.acme.dnsChallenge.provider={{dns_provider}}
+    - --certificatesResolvers.dns.acme.email={{admin_email}}
+    - --certificatesResolvers.dns.acme.storage=/acme/acme.json
+    - --certificatesresolvers.http.acme.httpchallenge=true
+    - --certificatesresolvers.http.acme.httpchallenge.entrypoint=web
+    - --certificatesresolvers.http.acme.email={{admin_email}}
+    - --certificatesresolvers.http.acme.storage=/acme/acme.json
+{% if staging_acme %}
+    - --certificatesresolvers.http.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+{% endif %}
+    - --certificatesresolvers.tls.acme.tlschallenge=true
+    - --certificatesresolvers.tls.acme.email={{admin_email}}
+    - --certificatesresolvers.tls.acme.storage=/acme/acme.json
+{% if staging_acme %}
+    - --certificatesresolvers.tls.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+{% endif %}
+{% endif %}
+    - --entrypoints.web.address=:80
+    - --entrypoints.websecure.address=:443/tcp
+    - --entryPoints.federation.address=:8448
+    # Email ports/protocols
+    # - --entryPoints.smtp.address=:25
+    - --entryPoints.smtp-starttls.address=:587
+    - --entryPoints.smtp-tls.address=:465
+    # - --entryPoints.imap.address=:143
+    - --entryPoints.imaps.address=:993
+    - --entryPoints.mail-managesieve.address=:4190
+    - --entrypoints.web.http.redirections.entryPoint.to=websecure
+    - --entrypoints.web.http.redirections.entryPoint.scheme=https
+    - --entrypoints.web.http.redirections.entrypoint.permanent=true
+    ## Please see the Forwarded Header Trust section of the Authelia Traefik Integration documentation.
+    - --entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7
+#   - --entryPoints.websecure.forwardedHeaders.insecure=false
+    - --entryPoints.websecure.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7
+    # - --entryPoints.websecure.proxyProtocol.insecure=false
+    - --log.level=WARNING
+    - --accessLog.filePath=/var/log/access.log
+    - --accessLog.filters.statusCodes=400-505
+    - --metrics.prometheus=true
+    - --metrics.prometheus.buckets=0.100000, 0.300000, 1.200000, 5.000000
+    - --metrics.prometheus.addEntryPointsLabels=true
+    - --metrics.prometheus.addServicesLabels=true
+    - --metrics.prometheus.entryPoint=metrics
+    - --providers.docker=true
+    - --providers.docker.endpoint=unix:///var/run/docker.sock
+    - --providers.docker.exposedbydefault=false
+    - --providers.docker.network=traefik
+    - --serversTransport.insecureSkipVerify=true
+    - --providers.file.directory=/config
+    - --providers.file.watch=true

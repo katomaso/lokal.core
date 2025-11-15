@@ -1,0 +1,176 @@
+---
+- name: Export app_root variable
+  ansible.builtin.set_fact:
+    app_root: "{{project_root}}/{{app_domain}}"
+    app_first_install: false
+
+- name: Create {{app_domain}} directory
+  ansible.builtin.file:
+    path: "{{app_root}}"
+    state: directory
+    owner: "{{uid}}"
+    group: "{{gid}}"
+
+- name: Create {{app_domain}} data directories
+  ansible.builtin.file:
+    path: "{{app_root}}/{{item}}"
+    state: directory
+  loop: "{{app_dirs}}"
+  when: app_dirs is defined
+
+- name: Checkout app git repository to {{app_root}}/git if given
+  ansible.builtin.git:
+    repo: "{{app_git}}"
+    dest: "{{app_root}}/git"
+    version: "{%if app_version is defined%}{{app_version}}{%else%}'HEAD'{%endif%}"
+    force: true
+  when: app_git is defined
+
+- name: Link provided SSL certificate for this subdomain
+  ansible.builtin.file:
+    state: link
+    src: "{{project_root}}/.certs/default.crt"
+    dest: "{{project_root}}/.certs/{{app_domain}}/{{app_domain}}.crt"
+  when: ssl_key is defined and ssl_cert is defined
+
+- name: Link provided SSL key for this subdomain
+  ansible.builtin.file:
+    state: link
+    src: "{{project_root}}/.certs/default.key"
+    dest: "{{project_root}}/.certs/{{app_domain}}/{{app_domain}}.key"
+  when: ssl_key is defined and ssl_cert is defined
+
+- name: Self-sign certificate for the domain
+  ansible.builtin.include_tasks:
+    file: include/generate-self-signed-certs.yml
+  when: not ssl_use_acme and not (ssl_key is defined and ssl_cert is defined)
+
+- name: Create {{app_domain}} external data directories
+  ansible.builtin.file:
+    path: "{{item.value}}"
+    state: directory
+  loop: "{{linked_dirs | dict2items}}"
+  when: linked_dirs is defined and linked_dirs|bool  # truthy does not stop None value?!
+
+- name: Link {{app_domain}} external directories
+  ansible.builtin.file:
+    path: "{{app_root}}/{{item.key}}"
+    src: "{{item.value}}"
+    state: link
+  loop: "{{linked_dirs | dict2items}}"
+  when: linked_dirs is defined and linked_dirs|bool
+
+- name: Get previous {{app_domain}} version
+  ansible.builtin.slurp:
+    src: "{{app_root}}/.version"
+  register: version_file
+  when: app_version is defined
+  ignore_errors: true
+
+- name: Mark app_first_install=true
+  ansible.builtin.set_fact:
+    app_first_install: true
+  when: app_version is defined and not version_file is defined
+
+- name: Compare previous {{app_domain}} version numerically
+  ansible.builtin.set_fact:
+    app_version_prev: "{{ version_file['content'] | b64decode }}"
+    app_updated: "{{ (version_file['content'] | b64decode) is version(app_version, '<') }}"
+  when: app_version is defined and version_file is defined and version_file.content is defined
+  ignore_errors: true  # might happen when version isn't really a number
+
+- name: Compare previous {{app_domain}} version textually
+  ansible.builtin.set_fact:
+    app_version_prev: "{{ version_file['content'] | b64decode }}"
+    app_updated: "{{ (version_file['content'] | b64decode) != app_version }}"
+  when: not app_updated is defined and app_version is defined and version_file is defined and version_file.content is defined
+  ignore_errors: true  # might happen when version isn't really a number
+
+# Auto-generate database name, user, and password in case that the developer/user
+# did not provide their own app_db_name (and others (user, password that we don't check)
+- name: "Export app_db facts"
+  ansible.builtin.set_fact:
+    app_db_name: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_user: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_password: "{{ (lokal_secret + app_domain) | hash('sha1') | regex_search('\\w{10}') }}"
+    app_db_pass: "{{app_db_password}}"
+
+- name: "Call lokal/tasks/mysql/create.yml"
+  ansible.builtin.import_tasks:
+    file: mysql/create.yml
+  when: app_db is defined and app_db == "mysql"
+
+- name: "Call lokal/tasks/postgres/create.yml"
+  ansible.builtin.import_tasks:
+    file: postgres/create.yml
+  when: app_db is defined and app_db == "postgres"
+
+# Auto-generate variables for minio bucket (name, user, password) derived from the domain
+# and lokal_secret
+- name: "Export app_bucket facts"
+  ansible.builtin.set_fact:
+    app_bucket_name: "{{ app_domain | replace('.', '-') | replace('_', '') }}"
+    app_bucket_user: "{{ app_domain | replace('.', '-') | replace('_', '') }}"
+    app_bucket_password: "{{ (lokal_secret + app_domain) | hash('sha1') | regex_search('\\w{10}') }}"
+  when: app_bucket is defined and app_bucket == "minio"
+
+- name: "Call lokal/tasks/minio/create.yml"
+  ansible.builtin.import_tasks:
+    file: minio/create.yml
+  when: app_bucket is defined and app_bucket == "minio"
+
+# Docker should take care of this. This role purpose should be only closing ports
+# that we don't want the internet to access.
+# - name: Open {{app_domain}} firewall ports
+#   become: true
+#   vars:
+#     firewall_group: "{{app_domain}}"
+#     firewall_allowed_tcp_ports: "{{firewall_tcp}}"
+#     firewall_allowed_udp_ports: "{{firewall_udp}}"
+#     # firewall_restart_docker: true
+#   ansible.builtin.import_role:
+#     name: geerlingguy.firewall.d
+#   when: firewall_tcp is truthy or firewall_udp is truthy
+
+- name: Render templates
+  ansible.builtin.template:
+    src: "{{item.key}}"
+    dest: "{{app_root}}/{{item.value}}"
+  loop: "{{ app_templates | dict2items }}"
+  when: app_templates is defined
+
+- name: Copy static files (but do not override existing ones)
+  ansible.builtin.copy:
+    src: "files/{{item.key}}"
+    dest: "{{app_root}}/{{item.value}}"
+    force: false
+  loop: "{{ app_templates | dict2items }}"
+  when: app_files is defined
+
+# stop original services and - if upgrading - remove previous images
+- name: Docker purge unused images
+  ansible.builtin.shell:
+    cmd: docker compose down --rmi local
+    chdir: "{{app_root}}"
+  when: app_version is defined and app_updated is defined and app_updated is truthy and app_first_install is falsy
+
+- name: Render {{app_domain}} docker-compose.yml
+  ansible.builtin.template:
+    src: "roles/{{app}}/templates/compose.yml"
+    dest: "{{app_root}}/docker-compose.yml"
+    mode: "0600"
+
+# you can avoid starting the app defining "start: false" in `vars` section
+- name: Start the app at {{app_domain}}
+  ansible.builtin.shell:
+    cmd: "docker compose up -d"
+    chdir: "{{app_root}}"
+  when: not app_start is defined or app_start is truthy  # start only when start: false is not a fact
+  notify: "lokal : Restart router"
+
+# as a last step: render .version file to mark app successfully installed
+- name: Set current {{app}} version
+  ansible.builtin.copy:
+    dest: "{{app_root}}/.version"
+    content: "{{app_version}}"
+  when: app_version is defined

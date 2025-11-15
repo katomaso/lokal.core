@@ -1,0 +1,67 @@
+networks:
+  traefik:
+    external: true
+  lokal:
+    external: true
+
+services:
+  ldap:
+    image: nitnelave/lldap:stable
+    container_name: ldap
+    #ports:
+    #   - "3890:3890" # LDAP !only for localhost connections - don't allow on firewall!
+    # don't even export. It is a pain in the ass to disable routing external traffic so this is easier
+    #   - "17170:17170" # web front-end
+    restart: unless-stopped
+    volumes:
+      - "{{app_root}}/ldap/:/data/"
+    environment:
+      UID: "{{uid}}"
+      GID: "{{gid}}"
+      TZ: "{{tz}}"
+    networks:
+      - traefik
+      - lokal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.ldap.entrypoints: websecure
+      traefik.http.routers.ldap.rule: Host(`users.{{domain}}`)
+      traefik.http.routers.ldap.tls: "true"
+      traefik.http.services.ldap.loadbalancer.server.port: 17170
+{% if ssl_use_acme %}
+      traefik.http.routers.ldap.tls.certresolver: {{cert_resolver}}
+{% endif %}
+
+  authelia:
+    container_name: authelia
+    user: "{{uid}}:{{gid}}"
+    image: authelia/authelia
+    restart: unless-stopped
+    networks:
+      - traefik
+      - lokal
+    # expose:
+    #   - 9091
+    volumes:
+      - {{app_root}}/auth/conf/:/config/
+      - {{app_root}}/auth/data/:/data/
+    environment:
+      TZ: "{{tz}}"
+      AUTHELIA_JWT_SECRET: "{{authelia_jwt_secret}}"
+      AUTHELIA_SESSION_SECRET: "{{authelia_session_secret}}"
+      # AUTHELIA_STORAGE_PASSWORD: "{{authelia_storage_password}}"
+      # AUTHELIA_STORAGE_ENCRYPTION_KEY: "{{authelia_storage_encryption_key}}"
+    labels:
+      traefik.enable: true
+      traefik.http.routers.authelia.rule: Host(`auth.{{domain}}`)
+      traefik.http.routers.authelia.entryPoints: websecure
+      traefik.http.routers.authelia.tls: true
+{% if ssl_use_acme %}
+      traefik.http.routers.authelia.tls.certresolver: {{cert_resolver}}
+{% endif %}
+      traefik.http.middlewares.authelia.forwardAuth.address: http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.{{domain}}%2F
+      traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader: true
+      traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
+      traefik.http.middlewares.authelia-basic.forwardAuth.address: http://authelia:9091/api/verify?auth=basic
+      traefik.http.middlewares.authelia-basic.forwardAuth.trustForwardHeader: true
+      traefik.http.middlewares.authelia-basic.forwardAuth.authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email

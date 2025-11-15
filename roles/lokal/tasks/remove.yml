@@ -1,0 +1,60 @@
+#
+# How to use remove.yml in your application
+#
+# Create file your-app/tasks/remove.yml with following content
+#
+# ---
+# - name: Remove {{qpixel_domain}}
+#   ansible.builtin.include_role:
+#     name: lokal.core.lokal
+#     tasks_from: remove
+#   vars:
+#     app_domain: "{{qpixel_domain}}"
+#     app_db: "mysql"  # can be "postgres" or simply omitted
+#     app_bucket: "minio"  # or can be omitted
+
+---
+- name: Docker-compose down
+  ansible.builtin.shell:
+    cmd: "docker compose down"
+    chdir: "{{project_root}}/{{app_domain}}"
+  ignore_errors: true  # ignore because docker compose down fails on removing external networks
+  notify: "lokal : Restart router"
+
+- name: "Call mysql/remove.yml"
+  ansible.builtin.include_tasks:
+    file: mysql/remove.yml
+  vars:
+    app_db_name: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_user: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_password: "{{ (lokal_secret + app_domain) | hash('sha1') | regex_search('\\w{10}') }}"
+  when: app_db is defined and app_db == "mysql"
+
+- name: "Call postgres/remove.yml"
+  ansible.builtin.include_tasks:
+    file: postgres/remove.yml
+  vars:
+    app_db_name: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_user: "{{ app_domain | replace('.', '_') | replace('-', '') }}"
+    app_db_password: "{{ (lokal_secret + app_domain) | hash('sha1') | regex_search('\\w{10}') }}"
+  when: app_db is defined and app_db == "postgres"
+
+- name: "Call minio/remove.yml"
+  ansible.builtin.include_tasks:
+    file: minio/remove.yml
+  vars:
+    app_bucket_name: "{{ app_domain | replace('.', '-') | replace('_', '') }}"
+    app_bucket_user: "{{ app_domain | replace('.', '-') | replace('_', '') }}"
+    app_bucket_password: "{{ (lokal_secret + app_domain) | hash('sha1') | regex_search('\\w{10}') }}"
+  when: app_bucket is defined and app_bucket == "minio"
+
+- name: Remove the app directory
+  ansible.builtin.file:
+    path: "{{project_root}}/{{app_domain}}"
+    state: absent
+  become: true
+
+- name: Docker purge unused images
+  ansible.builtin.shell:
+    cmd: docker image prune -f
+    chdir: "{{project_root}}"

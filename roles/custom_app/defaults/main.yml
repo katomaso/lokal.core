@@ -1,0 +1,5 @@
+custom_name: custom_app  # one-word name
+custom_subdomain: app
+custom_domain: "{{custom_subdomain}}.{{domain}}"
+# custom_git: "https://token:your-deploy-token@github.com/username/project.git"
+custom_ref: main  # branch name
