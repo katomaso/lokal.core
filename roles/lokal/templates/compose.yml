@@ -38,7 +38,7 @@ services:
 
   postgres:
     container_name: postgres
-    image: nickblah/postgis:12-bullseye-postgis-3
+    image: nickblah/postgis:{{postgres_version}}
     # user: "{{uid}}:{{gid}}"  # needs the postgres user
     environment:
       POSTGRES_PASSWORD: "{{postgres_root_password}}"

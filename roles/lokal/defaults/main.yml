@@ -47,6 +47,6 @@ postgres_port: 5432
 
 prometheus_version: "v3.7.3"
 traefik_version: "latest" # v2.9.6
-mariadb_version: "10.6.16-focal"
-postgres_version: "16-3.4"
+mariadb_version: "latest"
+postgres_version: "latest"
 minio_version: "RELEASE.2025-02-03T21-03-04Z"
