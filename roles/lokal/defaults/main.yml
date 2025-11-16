@@ -26,17 +26,11 @@ s3_secret_key: ''
 # HTTPS certificate handling
 ssl_use_acme: false # obtain HTTPS certificates from ACME server
 staging_acme: false # use only staging ACME server
-# ssl_key:
-# ssl_cert:
+# ssl_key: absolute path or relative path to your CWD
+# ssl_cert: absolute path or relative path to your CWD
 
 # cert resolver can be "dns", "http", or "tls"
 cert_resolver: http
-
-# If you are using "cert_resolver: dns" then you need to give API access to
-# your DNS (domain) provider so the cert resolver can create domains and certificates
-dns_provider: namecheap
-namecheap_api_user:
-namecheap_api_key:
 
 # Common services settings
 mysql_root_password: "{{('mysql' + lokal_secret) | hash('sha1') | regex_search('\\w{12}') }}"

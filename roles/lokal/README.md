@@ -40,7 +40,6 @@ and `gid`.
 A list of available variables that you can define in role's `tasks/install.yml` when
 including `lokal.install` tasks. Please see the example `roles/_example/tasks/install.yml`
 
-- `app` name of your app -
 - `app_dirs` (optional) list of directories that will be created inside `app_root`
 - `app_templates` (optional) files expected in `template/` that will be rendered to
   Example: `app_templates: database.yml: config/database.yml` will render template/config.conf from local folder to remote `{{app_root}}/config/database.yml` so you can use it in docker-compose.yml simply as `"config/database.yml"`

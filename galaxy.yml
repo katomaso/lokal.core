@@ -37,12 +37,11 @@ tags: ['selfhost', 'homelabos', 'cloud', 'setup']
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
 dependencies: {
-  "markuman.nextcloud": ">=29.0.4",
   "amazon.aws": ">=9.2.0",
   "community.crypto": ">=2.18.0",
-  "community.general": ">=8.4.0",
-  "community.mysql": ">=3.9.0",
-  "community.postgresql": ">=3.4.0",
+  "community.general": ">=12.0.0",
+  "community.mysql": ">=4.0.1",
+  "community.postgresql": ">=4.1.0",
 }
 
 # The URL of the originating SCM repository
@@ -68,7 +67,6 @@ build_ignore: [
   ".gitmodules",
   ".github",
   "tryitout.sh",
-  "hosts",
 ]
 
 # A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
