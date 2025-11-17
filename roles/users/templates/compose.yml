@@ -6,7 +6,7 @@ networks:
 
 services:
   ldap:
-    image: nitnelave/lldap:stable
+    image: nitnelave/lldap:{{lldap_version}}
     container_name: ldap
     #ports:
     #   - "3890:3890" # LDAP !only for localhost connections - don't allow on firewall!

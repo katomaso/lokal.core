@@ -40,7 +40,7 @@ dependencies: {
   "amazon.aws": ">=9.2.0",
   "community.crypto": ">=2.18.0",
   "community.general": ">=12.0.0",
-  "community.mysql": ">=4.0.1",
+  "community.mysql": ">=3.9.0",
   "community.postgresql": ">=4.1.0",
 }
 

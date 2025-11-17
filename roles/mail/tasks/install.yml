@@ -40,14 +40,18 @@
   register: imap_create
   failed_when: imap_create.rc != 0 and "user already exists" not in imap_create.stderr
 
-# Now the same for mail_users
+- name: Check that mail_users and "users" role are not defined altogether
+  ansible.builtin.fail:
+    message: "You cannnot have 'users' role installed and defined mail_users
+  when: '"users" not in services and mail_users is defined'
+
 - name: Create SMTP custom users (if LDAP is not used)
   ansible.builtin.lineinfile:
     create: true
     line: "{{item.key}}@{{domain}}:bcrypt:{{item.value | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
     search_string: "{{item.key}}:"
     path: "{{app_root}}/mail/users.passwd"
-  when: '"users" not in services and mail_users is defined'
+  when: 'mail_users is defined'
   loop: "{{ mail_users|dict2items }}"
 
 - name: Create IMAP custom users (if LDAP is not used)
@@ -56,7 +60,7 @@
       docker compose exec mail
       maddy imap-acct create {{item.key}}@{{domain}}
     chdir: "{{app_root}}"
-  when: '"users" not in services and mail_users is defined'
+  when: 'mail_users is defined'
   loop: "{{ mail_users|dict2items }}"
   register: imap_create
   failed_when: imap_create.rc != 0 and "user already exists" not in imap_create.stderr
