@@ -8,7 +8,7 @@ networks:
   postgres:
     name: postgres
   lokal:
-    name: lokal.core.lokal
+    name: lokal
     internal: true
   minio:
     name: minio
@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
     volumes:
     - type: bind
-      source: "{{lokal_root}}/mysql/"
+      source: "{{project_root}}/mysql/"
       target: "/var/lib/mysql/"
 
   postgres:
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     volumes:
     - type: bind
-      source: "{{lokal_root}}/postgres/"
+      source: "{{project_root}}/postgres/"
       target: "/var/lib/postgres/data/"
 
   minio:
@@ -65,10 +65,10 @@ services:
       MC_CONFIG_DIR: /.mc
     volumes:
       - type: bind
-        source: "{{lokal_root}}/minio/data"
+        source: "{{project_root}}/minio/data"
         target: "/data"
       - type: bind
-        source: "{{lokal_root}}/minio/config"
+        source: "{{project_root}}/minio/config"
         target: "/.mc"
     command: server /data --console-address=":9090"
     container_name: minio
@@ -90,11 +90,11 @@ services:
     - NET_RAW
     volumes:
     - type: bind
-      source: "{{lokal_root}}/traefik/log/"
+      source: "{{project_root}}/traefik/log/"
       target: "/var/log/traefik/"
       read_only: true
     - type: bind
-      source: "{{lokal_root}}/fail2ban/"
+      source: "{{project_root}}/fail2ban/"
       target: "/data/"
 
 {% if ssl_use_acme %}
@@ -108,16 +108,16 @@ services:
       traefik.enable: false
     volumes:
       - type: bind
-        source: "{{lokal_root}}/traefik/acme"
+        source: "{{project_root}}/traefik/acme"
         target: "/data"
       - type: bind
-        source: "{{lokal_root}}/traefik/dump"
+        source: "{{project_root}}/traefik/dump"
         target: "/dump"
       - type: bind
         source: "{{project_root}}/.certs"
         target: "/lokal"
       - type: bind
-        source: "{{lokal_root}}/dumper/hook.sh"
+        source: "{{project_root}}/.dumper/hook.sh"
         target: "/hook.sh"
 {% endif %}
 
@@ -153,13 +153,13 @@ services:
       source: "/var/run/docker.sock"
       target: "/var/run/docker.sock"
     - type: bind
-      source: "{{lokal_root}}/traefik/log"
+      source: "{{project_root}}/traefik/log"
       target: "/var/log"  # used for fail2ban
     - type: bind
-      source: "{{lokal_root}}/traefik/acme"
+      source: "{{project_root}}/traefik/acme"
       target: "/acme"
     - type: bind
-      source: "{{lokal_root}}/traefik/conf"
+      source: "{{project_root}}/traefik/conf"
       target: "/config"
 {% if not ssl_use_acme %}
     - type: bind
