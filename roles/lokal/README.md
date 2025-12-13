@@ -45,7 +45,7 @@ including `lokal.install` tasks. Please see the example `roles/_example/tasks/in
   Example: `app_templates: database.yml: config/database.yml` will render template/config.conf from local folder to remote `{{app_root}}/config/database.yml` so you can use it in docker-compose.yml simply as `"config/database.yml"`
 - `app_git` (optional) git URL where to download the app from - expects `build: {context: "{{app}}", dockerfile: {{app}}/Dockerfile}` in your compose.yml so the docker is built directly on the server
 - `app_version` (optional) version of your app - if an update happen that `app_updated` will be true
-- `app_db` set to "mysql" or "postgres" to receive `app_db_user`, `app_db_password`, and `app_db_name` to your compose.yml and rest of install.yml
+- `app_db` set to "mysql" or "postgres" to receive `app_db_user`, `app_db_pass`, and `app_db_name` to your compose.yml and rest of install.yml
 - `app_bucket` set to "minio" to receive `app_bucket_name`, `app_bucket_user`, `app_bucket_password` to your compose.yml and rest of install.yml
 - `start` (optional, boolean) - whether directly invoke `docker compose up -d` at the end
 

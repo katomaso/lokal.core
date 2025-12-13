@@ -6,7 +6,7 @@ services:
     environment:
       MYSQL_DATABASE: {{app_db_name}}      # db credentials might be auto-generated
       MYSQL_USER: {{app_db_user}}          # if you don't specify them manually
-      MYSQL_PASSWORD: {{app_db_password}}  # and you shouldn't really - it's safer
+      MYSQL_PASSWORD: {{app_db_pass}}  # and you shouldn't really - it's safer
       MYSQL_HOST: {{mysql_host}}
     ports:
     - '9099' # exported ports will be accessible from outside, if you allow them in firewall as well

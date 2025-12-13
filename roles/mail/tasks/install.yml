@@ -20,7 +20,7 @@
 - name: Wait for maddy to boot up before trying to create email accounts
   ansible.builtin.pause:
     seconds: 2
-  when: '"users" not in services'
+  when: '"lokal.core.users" not in services'
 
 - name: Create SMTP admin user (if LDAP is not used)
   ansible.builtin.lineinfile:
@@ -28,7 +28,7 @@
     line: "{{admin_username}}@{{domain}}:bcrypt:{{ admin_password | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
     search_string: "{{admin_username}}@{{domain}}:"
     path: "{{app_root}}/mail/users.passwd"
-  when: '"users" not in services'
+  when: '"lokal.core.users" not in services'
 
 - name: Create IMAP admin user (if LDAP is not used)
   ansible.builtin.shell:
@@ -42,8 +42,8 @@
 
 - name: Check that mail_users and "users" role are not defined altogether
   ansible.builtin.fail:
-    message: "You cannnot have 'users' role installed and defined mail_users
-  when: '"users" not in services and mail_users is defined'
+    message: "You cannnot have 'users' role installed and defined mail_users"
+  when: '"lokal.core.users" not in services and mail_users is defined'
 
 - name: Create SMTP custom users (if LDAP is not used)
   ansible.builtin.lineinfile:

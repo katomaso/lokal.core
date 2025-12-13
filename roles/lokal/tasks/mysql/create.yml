@@ -10,5 +10,5 @@
   ansible.builtin.shell:
     cmd: >
       docker compose exec mysql
-      mysql -u root --password={{mysql_root_password}} -e "GRANT ALL ON {{app_db_name}}.* TO '{{app_db_user}}'@'%' IDENTIFIED BY '{{app_db_password}}'"
+      mysql -u root --password={{mysql_root_password}} -e "GRANT ALL ON {{app_db_name}}.* TO '{{app_db_user}}'@'%' IDENTIFIED BY '{{app_db_pass}}'"
     chdir: "{{project_root}}/lokal"

@@ -11,7 +11,7 @@
   ansible.builtin.shell:
     cmd: >
       docker compose exec postgres
-      psql -c "CREATE USER {{app_db_user}} WITH NOSUPERUSER NOCREATEDB PASSWORD '{{app_db_password}}'" postgres postgres;
+      psql -c "CREATE USER {{app_db_user}} WITH NOSUPERUSER NOCREATEDB PASSWORD '{{app_db_pass}}'" postgres postgres;
     chdir: "{{project_root}}/lokal"
   when: psql_db_exists.stdout is falsy
 

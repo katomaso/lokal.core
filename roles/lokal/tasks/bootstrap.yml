@@ -84,11 +84,6 @@
     dest: '{{project_root}}/traefik/conf/dynamic.yml'
     force: true
 
-- name: "Copy prometheus config"
-  ansible.builtin.copy:
-    src: files/prometheus
-    dest: '{{project_root}}/prometheus/etc/'
-
 - name: "Copy dumper's hook"
   ansible.builtin.copy:
     src: files/dumper/hook.sh

@@ -72,7 +72,7 @@ services:
       ROUNDCUBEMAIL_DB_HOST: "{{mysql_host}}"
       ROUNDCUBEMAIL_DB_PORT: "{{mysql_port}}"
       ROUNDCUBEMAIL_DB_USER: "{{app_db_user}}"
-      ROUNDCUBEMAIL_DB_PASSWORD: "{{app_db_password}}"
+      ROUNDCUBEMAIL_DB_PASSWORD: "{{app_db_pass}}"
       ROUNDCUBEMAIL_DB_NAME: "{{app_db_name}}"
     networks:
     - mysql

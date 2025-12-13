@@ -85,9 +85,6 @@ services:
       - NET_RAW
     depends_on:
     - traefik
-    cap_add:
-    - NET_ADMIN
-    - NET_RAW
     volumes:
     - type: bind
       source: "{{project_root}}/traefik/log/"
@@ -99,7 +96,7 @@ services:
 
 {% if ssl_use_acme %}
   dumper:
-    image: ldez/traefik-certs-dumper:v2.8.1
+    image: ldez/traefik-certs-dumper:v2.10
     container_name: dumper
     command: file --version v2 --watch --source /data/acme.json --dest /dump --post-hook "sh /hook.sh"
     restart: unless-stopped
@@ -144,10 +141,6 @@ services:
     restart: unless-stopped
     environment:
       CERT_RESOLVER: {{cert_resolver}}
-{% if cert_resolver == "dns" and dns_provider == "namecheap" %}
-      NAMECHEAP_API_USER: {{namecheap_api_user}}
-      NAMECHEAP_API_KEY: {{namecheap_api_key}}
-{% endif %}
     volumes:
     - type: bind
       source: "/var/run/docker.sock"
