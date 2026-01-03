@@ -25,7 +25,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.http.routers.ldap.entrypoints: websecure
-      traefik.http.routers.ldap.rule: Host(`users.{{domain}}`)
+      traefik.http.routers.ldap.rule: Host(`users.{{primary_domain}}`)
       traefik.http.routers.ldap.tls: "true"
       traefik.http.services.ldap.loadbalancer.server.port: 17170
 {% if ssl_use_acme %}
@@ -53,13 +53,13 @@ services:
       # AUTHELIA_STORAGE_ENCRYPTION_KEY: "{{authelia_storage_encryption_key}}"
     labels:
       traefik.enable: true
-      traefik.http.routers.authelia.rule: Host(`auth.{{domain}}`)
+      traefik.http.routers.authelia.rule: Host(`auth.{{primary_domain}}`)
       traefik.http.routers.authelia.entryPoints: websecure
       traefik.http.routers.authelia.tls: true
 {% if ssl_use_acme %}
       traefik.http.routers.authelia.tls.certresolver: {{cert_resolver}}
 {% endif %}
-      traefik.http.middlewares.authelia.forwardAuth.address: http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.{{domain}}%2F
+      traefik.http.middlewares.authelia.forwardAuth.address: http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.{{primary_domain}}%2F
       traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader: true
       traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
       traefik.http.middlewares.authelia-basic.forwardAuth.address: http://authelia:9091/api/verify?auth=basic

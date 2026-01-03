@@ -20,7 +20,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.http.routers.docs.entrypoints: websecure
-      traefik.http.routers.docs.rule: Host(`{{subdomain_docs}}.{{domain}}`)
+      traefik.http.routers.docs.rule: Host(`{{subdomain_docs}}.{{primary_domain}}`)
       traefik.http.routers.docs.tls: "true"
 {% if ssl_use_acme %}
       traefik.http.routers.docs.tls.certresolver: {{cert_resolver}}

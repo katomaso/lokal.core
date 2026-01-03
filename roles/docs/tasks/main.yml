@@ -45,7 +45,7 @@
 - name: Correct domain name
   ansible.builtin.lineinfile:
     path: "{{app_root}}/data/mkdocs.yml"
-    line: "site_url: https://{{subdomain_docs}}.{{domain}}/"
+    line: "site_url: https://{{subdomain_docs}}.{{primary_domain}}/"
     state: present
     search_string: "site_url: https://docs.lokal.network/"
 

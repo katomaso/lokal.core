@@ -4,5 +4,5 @@
     name: lokal.core.lokal
     tasks_from: remove
   vars:
-    app_domain: "mail.{{domain}}"
+    app_domain: "mail.{{primary_domain}}"
     app_db: "mysql"

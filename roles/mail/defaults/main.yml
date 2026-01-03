@@ -1,3 +1,11 @@
 # if you are not using `users` recipe then manually specyfing allowed users
 # is your only chance. Format is "username": "password" where
 mail_users:
+
+# By specifying mail_domains you effectively turn this server into mail server
+# the default {{primary_domain}} is included by default so if you don't want any extra
+# domains just leave this empty
+mail_domains:
+# - myfirstproject.com
+# - myhobbyproject.io
+# - friends-domain.net

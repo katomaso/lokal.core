@@ -41,23 +41,23 @@ services:
       - traefik.enable=true
       # IMAPs is using HostSNI for routing and passthrough for TLS. We could terminate TLS here and use port 143...
       # This HostSNI || is a trick how to force traefik to generate certificate for all domains mentioned in mail_domains
-      - traefik.tcp.routers.imaps-{{domain|replace(".", "-")}}.rule=HostSNI(`{{app_domain}}`)
-      - traefik.tcp.routers.imaps-{{domain|replace(".", "-")}}.entrypoints=imaps
-      - traefik.tcp.routers.imaps-{{domain|replace(".", "-")}}.tls.passthrough=true
-      - traefik.tcp.services.imaps-{{domain|replace(".", "-")}}.loadbalancer.server.port=993
-      - traefik.tcp.services.imaps-{{domain|replace(".", "-")}}.loadbalancer.proxyProtocol.version=2
+      - traefik.tcp.routers.imaps-{{primary_domain|replace(".", "-")}}.rule=HostSNI(`{{app_domain}}`)
+      - traefik.tcp.routers.imaps-{{primary_domain|replace(".", "-")}}.entrypoints=imaps
+      - traefik.tcp.routers.imaps-{{primary_domain|replace(".", "-")}}.tls.passthrough=true
+      - traefik.tcp.services.imaps-{{primary_domain|replace(".", "-")}}.loadbalancer.server.port=993
+      - traefik.tcp.services.imaps-{{primary_domain|replace(".", "-")}}.loadbalancer.proxyProtocol.version=2
       # Implicit TLS is the only way how to route SMTP using SNI rule, this requires TLS passthrough
-      - traefik.tcp.routers.smtp-{{domain|replace(".", "-")}}-tls.rule=HostSNI(`{{app_domain}}`)
-      - traefik.tcp.routers.smtp-{{domain|replace(".", "-")}}-tls.entrypoints=smtp-tls
-      - traefik.tcp.routers.smtp-{{domain|replace(".", "-")}}-tls.tls.passthrough=true
-      - traefik.tcp.services.smtp-{{domain|replace(".", "-")}}-tls.loadbalancer.server.port=465
-      - traefik.tcp.services.smtp-{{domain|replace(".", "-")}}-tls.loadbalancer.proxyProtocol.version=2
+      - traefik.tcp.routers.smtp-{{primary_domain|replace(".", "-")}}-tls.rule=HostSNI(`{{app_domain}}`)
+      - traefik.tcp.routers.smtp-{{primary_domain|replace(".", "-")}}-tls.entrypoints=smtp-tls
+      - traefik.tcp.routers.smtp-{{primary_domain|replace(".", "-")}}-tls.tls.passthrough=true
+      - traefik.tcp.services.smtp-{{primary_domain|replace(".", "-")}}-tls.loadbalancer.server.port=465
+      - traefik.tcp.services.smtp-{{primary_domain|replace(".", "-")}}-tls.loadbalancer.proxyProtocol.version=2
       # Explicit TLS (STARTTLS) is no different but it does not support SNI routing
       # seems that Traefic supports this since 2021
-      - traefik.tcp.routers.smtp-{{domain|replace(".", "-")}}-starttls.rule=HostSNI(`{{app_domain}}`)
-      - traefik.tcp.routers.smtp-{{domain|replace(".", "-")}}-starttls.entrypoints=smtp-starttls
-      - traefik.tcp.services.smtp-{{domain|replace(".", "-")}}-starttls.loadbalancer.server.port=587
-      - traefik.tcp.services.smtp-{{domain|replace(".", "-")}}-starttls.loadbalancer.proxyProtocol.version=2
+      - traefik.tcp.routers.smtp-{{primary_domain|replace(".", "-")}}-starttls.rule=HostSNI(`{{app_domain}}`)
+      - traefik.tcp.routers.smtp-{{primary_domain|replace(".", "-")}}-starttls.entrypoints=smtp-starttls
+      - traefik.tcp.services.smtp-{{primary_domain|replace(".", "-")}}-starttls.loadbalancer.server.port=587
+      - traefik.tcp.services.smtp-{{primary_domain|replace(".", "-")}}-starttls.loadbalancer.proxyProtocol.version=2
 
   webmail:
     image: roundcube/roundcubemail
@@ -67,7 +67,7 @@ services:
       ROUNDCUBEMAIL_DEFAULT_PORT: 143
       ROUNDCUBEMAIL_SMTP_SERVER: "mail"
       ROUNDCUBEMAIL_SMTP_PORT: 25
-      ROUNDCUBEMAIL_USERNAME_DOMAIN: "{{domain}}"
+      ROUNDCUBEMAIL_USERNAME_DOMAIN: "{{primary_domain}}"
       ROUNDCUBEMAIL_DB_TYPE: "mysql"
       ROUNDCUBEMAIL_DB_HOST: "{{mysql_host}}"
       ROUNDCUBEMAIL_DB_PORT: "{{mysql_port}}"

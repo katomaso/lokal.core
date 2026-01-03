@@ -14,7 +14,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.http.routers.mailhog.entrypoints: websecure
-      traefik.http.routers.mailhog.rule: Host(`{{subdomain__mailhog}}.{{domain}}`)
+      traefik.http.routers.mailhog.rule: Host(`{{subdomain__mailhog}}.{{primary_domain}}`)
       traefik.http.routers.mailhog.tls: "true"
       traefik.http.services.mailhog.loadbalancer.server.port: 8025
       traefik.http.routers.mailhog.tls.certresolver: {{cert_resolver}}

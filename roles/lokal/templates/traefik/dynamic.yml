@@ -14,8 +14,8 @@ tls:
         keyFile: /certs/default.key
 {% else %}
   certificates:
-    - certFile: /certs/{{domain}}/{{domain}}.crt
-      keyFile: /certs/{{domain}}/{{domain}}.key
+    - certFile: /certs/{{primary_domain}}/{{primary_domain}}.crt
+      keyFile: /certs/{{primary_domain}}/{{primary_domain}}.key
 {% for cert in cert_find_output.files %}
     - certFile: "/certs/{{cert['path'][(project_root+'/.certs')|length:]}}"
       keyFile: "/certs/{{cert['path'][(project_root+'/.certs')|length:-4]}}.key"

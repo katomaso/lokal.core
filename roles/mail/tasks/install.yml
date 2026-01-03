@@ -9,7 +9,7 @@
     app_port: 80  # this is port of webmail
     # app_domain has mail. prefix only not to colide with the root domain to which
     # it most likely points. Hostname and certificates are using bare mail_domain
-    app_domain: "mail.{{domain}}"
+    app_domain: "mail.{{primary_domain}}"
     app_templates:
       maddy.conf:  mail/maddy.conf
     app_db: "mysql"
@@ -25,8 +25,8 @@
 - name: Create SMTP admin user (if LDAP is not used)
   ansible.builtin.lineinfile:
     create: true
-    line: "{{admin_username}}@{{domain}}:bcrypt:{{ admin_password | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
-    search_string: "{{admin_username}}@{{domain}}:"
+    line: "{{admin_username}}@{{primary_domain}}:bcrypt:{{ admin_password | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
+    search_string: "{{admin_username}}@{{primary_domain}}:"
     path: "{{app_root}}/mail/users.passwd"
   when: '"lokal.core.users" not in services'
 
@@ -34,7 +34,7 @@
   ansible.builtin.shell:
     cmd: >
       docker compose exec mail
-      maddy imap-acct create {{admin_username}}@{{domain}}
+      maddy imap-acct create {{admin_username}}@{{primary_domain}}
     chdir: "{{app_root}}"
   when: '"users" not in services'
   register: imap_create
@@ -48,7 +48,7 @@
 - name: Create SMTP custom users (if LDAP is not used)
   ansible.builtin.lineinfile:
     create: true
-    line: "{{item.key}}@{{domain}}:bcrypt:{{item.value | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
+    line: "{{item.key}}@{{primary_domain}}:bcrypt:{{item.value | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
     search_string: "{{item.key}}:"
     path: "{{app_root}}/mail/users.passwd"
   when: 'mail_users is defined'
@@ -58,16 +58,16 @@
   ansible.builtin.shell:
     cmd: >
       docker compose exec mail
-      maddy imap-acct create {{item.key}}@{{domain}}
+      maddy imap-acct create {{item.key}}@{{primary_domain}}
     chdir: "{{app_root}}"
   when: 'mail_users is defined'
   loop: "{{ mail_users|dict2items }}"
   register: imap_create
   failed_when: imap_create.rc != 0 and "user already exists" not in imap_create.stderr
 
-- name: Get DKIM DNS configuration for {{domain}}
+- name: Get DKIM DNS configuration for {{primary_domain}}
   ansible.builtin.fetch:
-    src: "{{app_root}}/mail/dkim_keys/{{domain}}_lokal.dns"
-    dest: "{{domain}}_lokal.dns"
+    src: "{{app_root}}/mail/dkim_keys/{{primary_domain}}_lokal.dns"
+    dest: "{{primary_domain}}_lokal.dns"
     fail_on_missing: true
     flat: true

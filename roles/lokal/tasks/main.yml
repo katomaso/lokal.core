@@ -4,7 +4,7 @@
     cmd: 'cat /etc/group | grep docker | cut -d: -f 3'
   register: docker_gid_output
 
-- name: Register uid and gid variables
+- name: Register runtime and internal variables
   set_fact:
     uid: '{{ansible_facts["user_uid"]}}'
     gid: '{{ansible_facts["user_gid"]}}'
@@ -12,6 +12,8 @@
     gid_docker: '{{docker_gid_output.stdout}}'
     external_ipv4: '{{ansible_facts["default_ipv4"]["address"]}}'
     today: '{{ansible_facts["date_time"]["date"]}}'
+    project_root: "{{lokal_root}}/{{primary_domain}}"
+    lokal_logroot: "{{lokal_root}}/{{primary_domain}}/logs"
 
 - name: "Bootstrap basic infrastructure"
   include_tasks:

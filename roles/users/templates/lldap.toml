@@ -15,7 +15,7 @@ ldap_port = {{ldap_port}}
 http_port = 17170
 
 ## The public URL of the server, for password reset links.
-http_url = "https://users.{{domain}}"
+http_url = "https://users.{{primary_domain}}"
 
 ## Random secret for JWT signature.
 ## This secret should be random, and should be shared with application
@@ -48,7 +48,7 @@ ldap_user_dn = "{{admin_username}}"
 ## Admin email.
 ## Email for the admin account. It is only used when initially creating
 ## the admin user, and can safely be omitted.
-ldap_user_email = "{{admin_username}}@{{domain}}"
+ldap_user_email = "{{admin_username}}@{{primary_domain}}"
 
 ## Admin password.
 ## Password for the admin account, both for the LDAP bind and for the
@@ -104,14 +104,14 @@ port={{smtp_port}}
 ## How the connection is encrypted, either "TLS" or "STARTTLS".
 #smtp_encryption = "TLS"
 ## The SMTP user, usually your email address.
-user="{{admin_username}}@{{domain}}"
+user="{{admin_username}}@{{primary_domain}}"
 ## The SMTP password.
 password="{{admin_password}}"
 ## The header field, optional: how the sender appears in the email. The first
 ## is a free-form name, followed by an email between <>.
-#from="{{admin_username | title}} <{{admin_username}}@{{domain}}>"
+#from="{{admin_username | title}} <{{admin_username}}@{{primary_domain}}>"
 ## Same for reply-to, optional.
-#reply_to="Do not reply <noreply@{{domain}}>"
+#reply_to="Do not reply <noreply@{{primary_domain}}>"
 
 ## Options to configure LDAPS.
 ## To set these options from environment variables, use the following format

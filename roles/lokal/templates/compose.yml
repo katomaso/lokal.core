@@ -81,14 +81,19 @@ services:
     # no user: "{{uid}}:{{gid}}" because it cannot bind socket /var/run/fail2ban/fail2ban.sock
     container_name: fail2ban
     cap_add:
-      - NET_ADMIN
-      - NET_RAW
+    - NET_ADMIN
+    - NET_RAW
     depends_on:
     - traefik
+    environment:
+      TZ: "{{tz}}"
+      F2B_LOG_TARGET: STDOUT
+      F2B_LOG_LEVEL: INFO
+      F2B_DB_PURGE_AGE: 1d
     volumes:
     - type: bind
-      source: "{{project_root}}/traefik/log/"
-      target: "/var/log/traefik/"
+      source: "{{lokal_logroot}}"
+      target: "/var/log"
       read_only: true
     - type: bind
       source: "{{project_root}}/fail2ban/"
@@ -146,8 +151,8 @@ services:
       source: "/var/run/docker.sock"
       target: "/var/run/docker.sock"
     - type: bind
-      source: "{{project_root}}/traefik/log"
-      target: "/var/log"  # used for fail2ban
+      source: "{{lokal_logroot}}/traefik"
+      target: "/var/log"
     - type: bind
       source: "{{project_root}}/traefik/acme"
       target: "/acme"
@@ -156,11 +161,18 @@ services:
       target: "/config"
 {% if not ssl_use_acme %}
     - type: bind
-      source: "{{project_root}}/.certs/{{domain}}/"
+      source: "{{project_root}}/.certs/{{primary_domain}}/"
       target: "/certs/"
 {% endif %}
     command:
+    - --log.level=WARNING
     - --accessLog=true
+    - --accessLog.filePath=/var/log/access.log
+    - --accessLog.filters.statusCodes=400-505
+    - --docker.domain={{primary_domain}}
+    - --docker.watch=true
+    - --docker.exposedbydefault=false
+    - --api=true
     - --api.insecure=false
     - --api.dashboard=true
     - --api.debug=false
@@ -201,9 +213,6 @@ services:
 #   - --entryPoints.websecure.forwardedHeaders.insecure=false
     - --entryPoints.websecure.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7
     # - --entryPoints.websecure.proxyProtocol.insecure=false
-    - --log.level=WARNING
-    - --accessLog.filePath=/var/log/access.log
-    - --accessLog.filters.statusCodes=400-505
     - --metrics.prometheus=true
     - --metrics.prometheus.buckets=0.100000, 0.300000, 1.200000, 5.000000
     - --metrics.prometheus.addEntryPointsLabels=true

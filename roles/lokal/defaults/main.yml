@@ -1,13 +1,13 @@
 # Mandatory settings
-# Settings of `admin_password` and `domain` are required when deploying services
+# Settings of `admin_password` and `primary_domain` are required when deploying services
 # not just for server preparation and lokal installation (on the remote server).
 debug: false
 admin_username: admin
-admin_email: "{{admin_username}}@{{domain}}"
+admin_email: "{{admin_username}}@{{primary_domain}}"
 
 # Common base settings
 project_name: Lokal
-project_root: "/opt/lokal"
+lokal_root: "/opt/lokal"
 backup_root: "/opt/lokal-backup"
 country: US
 lang: en_US
@@ -41,6 +41,8 @@ postgres_host: postgres
 postgres_port: 5432
 
 # Common runtime variables
+# project_root: "{{lokal_root}}/{{primary_domain}}"
+# lokal_logroot: "{{project_root}}/logs"
 # UID: ''{{ ansible_facts["user_uid"] }}''
 # GID: '{{ ansible_facts["user_gid"] }}'
 # TZ: '{{ ansible_facts["date_time"]["tz"] }}'

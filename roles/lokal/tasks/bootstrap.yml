@@ -18,16 +18,15 @@
     path: '{{project_root}}/{{item}}'
     state: directory
   loop:
-    - fail2ban/filter.d
-    - fail2ban/jail.d
-    - mysql
+    - logs
     - .certs
     - .dumper
+    - fail2ban
+    - mysql
     - postgres
     - traefik/acme
     - traefik/conf
     - traefik/data
-    - traefik/log
     - traefik/dump
     - minio/data
     - minio/config
@@ -89,15 +88,10 @@
     src: files/dumper/hook.sh
     dest: '{{project_root}}/.dumper/hook.sh'
 
-- name: Render traefik fail2ban filter
-  ansible.builtin.template:
-    src: fail2ban/traefik-filter.conf.j2
-    dest: '{{project_root}}/fail2ban/filter.d/traefik-filter.conf'
-
-- name: Render traefik fail2ban jail
-  ansible.builtin.template:
-    src: fail2ban/traefik-jail.conf.j2
-    dest: '{{project_root}}/fail2ban/jail.d/traefik.conf'
+- name: Copy default fail2ban config
+  ansible.builtin.copy:
+    src: fail2ban/
+    dest: '{{project_root}}/fail2ban'
 
 - name: Render minio client config
   ansible.builtin.template:

@@ -4,7 +4,7 @@ session:
   #secret: unsecure_session_secret
   expiration: 3600  # 1 hour
   inactivity: 900  # 15 minutes
-  domain: {{domain}}
+  domain: {{primary_domain}}
 
 authentication_backend:
   ldap:
@@ -61,7 +61,7 @@ notifier:
     username: {{admin_username}}
     password: {{admin_password}}
     address: 'smtp://mail:25'
-    sender: {{admin_username}}@{{domain}}
+    sender: {{admin_username}}@{{primary_domain}}
 {% else %}
   filesystem:
     filename: /config/notification.txt

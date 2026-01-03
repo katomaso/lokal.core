@@ -2,11 +2,11 @@
 
 Contains two very important services: ldap for user management and authelia for authentication
 
-## LDAP (aka users.{{domain}})
+## LDAP (aka users.{{primary_domain}})
 
 
 
-## Authelia (aka auth.{{domain}})
+## Authelia (aka auth.{{primary_domain}})
 
 Authelia provides a single sign on (SSO) to your applications. Authelia captures every request that
 is going to your application. If it sees the request origin for the first time then it redirects user

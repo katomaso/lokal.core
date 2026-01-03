@@ -135,7 +135,7 @@ the container's labels.
       # traefik will only listen on HTTPS
       traefik.http.routers.yourapp.entrypoints: websecure
       # here you construct your final domain
-      traefik.http.routers.yourapp.rule: Host(`{{subdomain_yourapp}}.{{domain}}`)
+      traefik.http.routers.yourapp.rule: Host(`{{subdomain_yourapp}}.{{primary_domain}}`)
       traefik.http.routers.yourapp.tls: "true"
       # where the container listens (no need to export this port)
       traefik.http.services.yourapp.loadbalancer.server.port: 80
