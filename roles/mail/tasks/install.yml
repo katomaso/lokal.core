@@ -11,7 +11,7 @@
     # it most likely points. Hostname and certificates are using bare mail_domain
     app_domain: "mail.{{primary_domain}}"
     app_templates:
-      maddy.conf:  mail/maddy.conf
+      maddy.conf:  data/maddy.conf
     app_db: "mysql"
     app_dirs:
     - data
@@ -40,10 +40,10 @@
   register: imap_create
   failed_when: imap_create.rc != 0 and "user already exists" not in imap_create.stderr
 
-- name: Check that mail_users and "users" role are not defined altogether
+- name: Check that mail_users and "lokal.core.users" role are not defined altogether
   ansible.builtin.fail:
-    message: "You cannnot have 'users' role installed and defined mail_users"
-  when: '"lokal.core.users" not in services and mail_users is defined'
+    msg: "You cannnot have 'lokal.core.users' role installed and mail_users defined"
+  when: '"lokal.core.users" in services and mail_users is defined and mail_users is truthy'
 
 - name: Create SMTP custom users (if LDAP is not used)
   ansible.builtin.lineinfile:

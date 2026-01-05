@@ -133,7 +133,7 @@
 
 - name: Render templates
   ansible.builtin.template:
-    src: "{{item.key}}"
+    src: "{{app}}/{{item.key}}"
     dest: "{{app_root}}/{{item.value}}"
   loop: "{{ app_templates | dict2items }}"
   when: app_templates is defined
@@ -155,7 +155,7 @@
 
 - name: Render {{app_domain}} docker-compose.yml
   ansible.builtin.template:
-    src: "roles/{{app}}/templates/compose.yml"
+    src: "{{app}}/compose.yml"
     dest: "{{app_root}}/docker-compose.yml"
     mode: "0600"
 
