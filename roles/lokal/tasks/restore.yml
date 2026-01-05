@@ -39,39 +39,39 @@
 
 - name: "Uzip {{app_domain}} MySQL dump file"
   ansible.builtin.shell:
-    cmd: "zcat {{latest_backup.path}}/mysql.sql.gz > {{project_root}}/lokal/mysql/{{app_db_name}}.sql"
-    chdir: "{{project_root}}/lokal"
+    cmd: "zcat {{latest_backup.path}}/mysql.sql.gz > {{project_root}}/mysql/{{app_db_name}}.sql"
+    chdir: "{{project_root}}"
   when: app_db is defined and app_db == "mysql"
 
 - name: "Restore {{app_domain}} MySQL tables"
   ansible.builtin.shell:
     cmd: "docker compose exec mysql mysql -u root --password={{mysql_root_password}} -f -e 'source /var/lib/mysql/{{app_db_name}}.sql' {{app_db_name}}"
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   when: app_db is defined and app_db == "mysql"
 
 - name: "Delete ucompressed {{app_domain}} MySQL dump file"
   ansible.builtin.file:
-    path: "{{project_root}}/lokal/mysql/{{app_domain}}.sql"
+    path: "{{project_root}}/mysql/{{app_domain}}.sql"
     state: "absent"
   when: app_db is defined and app_db == "mysql"
 
 - name: "Uzip {{app_domain}} PostgreSQL dump file"
   ansible.builtin.shell:
-    cmd: "zcat {{latest_backup.path}}/mysql.sql.gz > {{project_root}}/lokal/postgres/{{app_db_name}}.sql"
-    chdir: "{{project_root}}/lokal"
-  when: app_db is defined and app_id == "postgres"
+    cmd: "zcat {{latest_backup.path}}/postgres.sql.gz > {{project_root}}/postgres/{{app_db_name}}.sql"
+    chdir: "{{project_root}}"
+  when: app_db is defined and app_db == "postgres"
 
 - name: "Restore {{app_db_name}} PostgreSQL tables"
   ansible.builtin.shell:
     cmd: "docker compose exec postgres pg_restore -U postgres -d {{app_db_name}} /var/lib/postgresql/data/{{app_db_name}}.sql"
-    chdir: "{{project_root}}/lokal"
-  when: app_db is defined and app_id == "postgres"
+    chdir: "{{project_root}}"
+  when: app_db is defined and app_db == "postgres"
 
 - name: "Delete ucompressed {{app_domain}} PostgreSQL dump file"
   ansible.builtin.file:
-    path: "{{project_root}}/lokal/postgres/{{app_domain}}.sql"
+    path: "{{project_root}}/postgres/{{app_domain}}.sql"
     state: "absent"
-  when: app_db is defined and app_id == "postgres"
+  when: app_db is defined and app_db == "postgres"
 
 - name: "Start {{app_domain}} again"
   ansible.builtin.shell:

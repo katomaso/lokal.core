@@ -4,7 +4,7 @@
     cmd: >
       docker compose exec postgres
       psql -XtAc "SELECT 1 FROM pg_database WHERE datname='{{app_db_name}}'" postgres postgres
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   register: psql_db_exists
 
 - name: Create {{app_db_name}} PostgreSQL user
@@ -12,7 +12,7 @@
     cmd: >
       docker compose exec postgres
       psql -c "CREATE USER {{app_db_user}} WITH NOSUPERUSER NOCREATEDB PASSWORD '{{app_db_pass}}'" postgres postgres;
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   when: psql_db_exists.stdout is falsy
 
 - name: Create {{app_db_name}} PostgreSQL database
@@ -20,7 +20,7 @@
     cmd: >
       docker compose exec postgres
       psql -c "CREATE DATABASE {{app_db_name}} OWNER {{app_db_user}}" postgres postgres;
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   when: psql_db_exists.stdout is falsy
 
 - name: Create extensions for {{app_db_name}} in PostgreSQL
@@ -28,6 +28,6 @@
     cmd: >
       docker compose exec postgres
       psql -c "CREATE EXTENSION IF NOT EXISTS {{item}}" {{app_db_name}} postgres;
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   when: app_db_extensions is defined
   loop: "{{app_db_extensions}}"

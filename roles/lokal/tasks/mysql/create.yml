@@ -3,12 +3,12 @@
   ansible.builtin.shell:
     cmd: >
       docker compose exec mysql
-      mysql -u root --password={{mysql_root_password}} -e 'CREATE DATABASE IF NOT EXISTS {{app_db_name}}'
-    chdir: "{{project_root}}/lokal"
+      {{mysql_binary}} -u root --password={{mysql_root_password}} -e 'CREATE DATABASE IF NOT EXISTS {{app_db_name}}'
+    chdir: "{{project_root}}"
 
 - name: Create MySQL user {{app_db_user}}
   ansible.builtin.shell:
     cmd: >
       docker compose exec mysql
-      mysql -u root --password={{mysql_root_password}} -e "GRANT ALL ON {{app_db_name}}.* TO '{{app_db_user}}'@'%' IDENTIFIED BY '{{app_db_pass}}'"
-    chdir: "{{project_root}}/lokal"
+      {{mysql_binary}} -u root --password={{mysql_root_password}} -e "GRANT ALL ON {{app_db_name}}.* TO '{{app_db_user}}'@'%' IDENTIFIED BY '{{app_db_pass}}'"
+    chdir: "{{project_root}}"

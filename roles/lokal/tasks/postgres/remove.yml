@@ -4,7 +4,7 @@
     cmd: >
       docker compose exec postgres
       psql -c 'DROP DATABASE "{{app_db_name}}"' postgres postgres;
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   ignore_errors: true
 
 - name: Remove {{app_db_user}} PostgreSQL user
@@ -12,5 +12,5 @@
     cmd: >
       docker compose exec postgres
       psql -c 'DROP USER "{{app_db_user}}"' postgres postgres;
-    chdir: "{{project_root}}/lokal"
+    chdir: "{{project_root}}"
   ignore_errors: true

@@ -35,6 +35,7 @@ cert_resolver: http
 # Common services settings
 mysql_root_password: "{{('mysql' + lokal_secret) | hash('sha1') | regex_search('\\w{12}') }}"
 mysql_host: mysql
+mysql_binary: mariadb
 mysql_port: 3306
 postgres_root_password: "{{('postgres' + lokal_secret) | hash('sha1') | regex_search('\\w{12}') }}"
 postgres_host: postgres

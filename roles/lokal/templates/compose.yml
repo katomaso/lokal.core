@@ -25,7 +25,7 @@ services:
     - mysql
     - lokal
     healthcheck:
-      test: mysql --protocol tcp -u root --password={{mysql_root_password}} -e "SELECT 1 FROM DUAL" mysql
+      test: "{{mysql_binary}} --protocol tcp -u root --password={{mysql_root_password}} -e 'SELECT 1 FROM DUAL' mysql"
       interval: 60s
       retries: 5
       start_period: 5s

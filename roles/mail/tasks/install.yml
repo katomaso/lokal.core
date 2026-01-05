@@ -14,7 +14,7 @@
       maddy.conf:  mail/maddy.conf
     app_db: "mysql"
     app_dirs:
-    - mail
+    - data
 
 # First, let's create SMTP credentials and the actual mailboxes (IMAP) for the admin user.
 - name: Wait for maddy to boot up before trying to create email accounts
@@ -27,7 +27,7 @@
     create: true
     line: "{{admin_username}}@{{primary_domain}}:bcrypt:{{ admin_password | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
     search_string: "{{admin_username}}@{{primary_domain}}:"
-    path: "{{app_root}}/mail/users.passwd"
+    path: "{{app_root}}/data/users.passwd"
   when: '"lokal.core.users" not in services'
 
 - name: Create IMAP admin user (if LDAP is not used)
@@ -50,7 +50,7 @@
     create: true
     line: "{{item.key}}@{{primary_domain}}:bcrypt:{{item.value | ansible.builtin.password_hash('bcrypt', ident='2b') }}"
     search_string: "{{item.key}}:"
-    path: "{{app_root}}/mail/users.passwd"
+    path: "{{app_root}}/data/users.passwd"
   when: 'mail_users is defined'
   loop: "{{ mail_users|dict2items }}"
 
@@ -67,7 +67,7 @@
 
 - name: Get DKIM DNS configuration for {{primary_domain}}
   ansible.builtin.fetch:
-    src: "{{app_root}}/mail/dkim_keys/{{primary_domain}}_lokal.dns"
+    src: "{{app_root}}/data/dkim_keys/{{primary_domain}}_lokal.dns"
     dest: "{{primary_domain}}_lokal.dns"
     fail_on_missing: true
     flat: true

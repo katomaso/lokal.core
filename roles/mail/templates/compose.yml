@@ -24,7 +24,7 @@ services:
       # - "25:25" # SMTP unencrypted available only internally
     volumes:
     - type: bind
-      source: "{{app_root}}/mail/"
+      source: "{{app_root}}/data"
       target: "/data"
     - type: bind
       source: "{{project_root}}/.certs/{{app_domain}}"
