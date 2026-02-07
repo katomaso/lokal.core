@@ -12,7 +12,7 @@
 
 - name: Stop running server
   ansible.builtin.shell:
-    cmd: "docker compose down"
+    cmd: "{{dc}} down"
     chdir: "{{app_root}}"
 
 - name: Clear old markdown files
@@ -51,5 +51,5 @@
 
 - name: Start the build and server
   ansible.builtin.shell:
-    cmd: "docker compose up -d"
+    cmd: "{{dc}} up -d"
     chdir: "{{app_root}}"

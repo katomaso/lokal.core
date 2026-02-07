@@ -106,7 +106,7 @@
 
 - name: Docker-compose up
   ansible.builtin.shell:
-    cmd: "docker compose up -d"
+    cmd: "{{dc}} up -d"
     chdir: "{{project_root}}"
 
 - name: Give the base time to boot up - takes at least 10 seconds

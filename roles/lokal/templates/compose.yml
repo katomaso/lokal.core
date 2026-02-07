@@ -9,7 +9,6 @@ networks:
     name: postgres
   lokal:
     name: lokal
-    internal: true
   minio:
     name: minio
 
@@ -85,6 +84,7 @@ services:
     - NET_RAW
     depends_on:
     - traefik
+    restart: on-failure
     environment:
       TZ: "{{tz}}"
       F2B_LOG_TARGET: STDOUT
@@ -98,6 +98,8 @@ services:
     - type: bind
       source: "{{project_root}}/fail2ban/"
       target: "/data/"
+    labels:
+      traefik.enable: false
 
 {% if ssl_use_acme %}
   dumper:
@@ -169,9 +171,12 @@ services:
     - --accessLog=true
     - --accessLog.filePath=/var/log/access.log
     - --accessLog.filters.statusCodes=400-505
-    - --docker.domain={{primary_domain}}
-    - --docker.watch=true
-    - --docker.exposedbydefault=false
+    - --providers.docker=true
+    - --providers.docker.watch=true
+    # - --providers.docker.domain={{primary_domain}}
+    - --providers.docker.exposedbydefault=false
+    - --providers.docker.endpoint=unix:///var/run/docker.sock
+    - --providers.docker.network=traefik
     - --api=true
     - --api.insecure=false
     - --api.dashboard=true
@@ -198,11 +203,11 @@ services:
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443/tcp
     - --entryPoints.federation.address=:8448
-    # Email ports/protocols
+    # Insecure  Email ports/protocols (StartTLS)
     # - --entryPoints.smtp.address=:25
+    # - --entryPoints.imap.address=:143
     - --entryPoints.smtp-starttls.address=:587
     - --entryPoints.smtp-tls.address=:465
-    # - --entryPoints.imap.address=:143
     - --entryPoints.imaps.address=:993
     - --entryPoints.mail-managesieve.address=:4190
     - --entrypoints.web.http.redirections.entryPoint.to=websecure
@@ -218,10 +223,6 @@ services:
     - --metrics.prometheus.addEntryPointsLabels=true
     - --metrics.prometheus.addServicesLabels=true
     - --metrics.prometheus.entryPoint=metrics
-    - --providers.docker=true
-    - --providers.docker.endpoint=unix:///var/run/docker.sock
-    - --providers.docker.exposedbydefault=false
-    - --providers.docker.network=traefik
     - --serversTransport.insecureSkipVerify=true
     - --providers.file.directory=/config
     - --providers.file.watch=true

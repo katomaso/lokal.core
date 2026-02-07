@@ -27,7 +27,7 @@
 
 - name: "Stop {{ app }} service"
   ansible.builtin.shell:
-    cmd: "docker compose down"
+    cmd: "{{dc}} down"
     chdir: "{{project_root}}/{{app_domain}}"
   ignore_errors: true
 
@@ -45,7 +45,7 @@
 
 - name: "Restore {{app_domain}} MySQL tables"
   ansible.builtin.shell:
-    cmd: "docker compose exec mysql mysql -u root --password={{mysql_root_password}} -f -e 'source /var/lib/mysql/{{app_db_name}}.sql' {{app_db_name}}"
+    cmd: "{{dc}} exec mysql mysql -u root --password={{mysql_root_password}} -f -e 'source /var/lib/mysql/{{app_db_name}}.sql' {{app_db_name}}"
     chdir: "{{project_root}}"
   when: app_db is defined and app_db == "mysql"
 
@@ -63,7 +63,7 @@
 
 - name: "Restore {{app_db_name}} PostgreSQL tables"
   ansible.builtin.shell:
-    cmd: "docker compose exec postgres pg_restore -U postgres -d {{app_db_name}} /var/lib/postgresql/data/{{app_db_name}}.sql"
+    cmd: "{{dc}} exec postgres pg_restore -U postgres -d {{app_db_name}} /var/lib/postgresql/data/{{app_db_name}}.sql"
     chdir: "{{project_root}}"
   when: app_db is defined and app_db == "postgres"
 
@@ -75,5 +75,5 @@
 
 - name: "Start {{app_domain}} again"
   ansible.builtin.shell:
-    cmd: "docker compose up -d"
+    cmd: "{{dc}} -p {{project_name}} up -d"
     chdir: "{{project_root}}/{{app_domain}}"

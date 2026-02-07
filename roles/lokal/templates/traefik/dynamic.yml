@@ -4,7 +4,7 @@ tls:
   options:
     default:
       minVersion: VersionTLS12
-    mintls13:
+    ssl:
       minVersion: VersionTLS13
 {% if ssl_key | default(false) %}
   stores:

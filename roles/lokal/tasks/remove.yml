@@ -16,7 +16,7 @@
 ---
 - name: Docker-compose down
   ansible.builtin.shell:
-    cmd: "docker compose down"
+    cmd: "{{dc}} down"
     chdir: "{{project_root}}/{{app_domain}}"
   ignore_errors: true  # ignore because docker compose down fails on removing external networks
   notify: "lokal : Restart router"

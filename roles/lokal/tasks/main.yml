@@ -14,6 +14,7 @@
     today: '{{ansible_facts["date_time"]["date"]}}'
     project_root: "{{lokal_root}}/{{primary_domain}}"
     lokal_logroot: "{{lokal_root}}/{{primary_domain}}/logs"
+    project_name: "{{primary_domain.replace('.', '').replace('-', '')}}"
 
 - name: "Bootstrap basic infrastructure"
   include_tasks:

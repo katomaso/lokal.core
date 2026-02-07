@@ -149,7 +149,7 @@
 # stop original services and - if upgrading - remove previous images
 - name: Docker purge unused images
   ansible.builtin.shell:
-    cmd: docker compose down --rmi local
+    cmd: "{{dc}} down --rmi local"
     chdir: "{{app_root}}"
   when: app_version is defined and app_updated is defined and app_updated is truthy and app_first_install is falsy
 
@@ -162,7 +162,7 @@
 # you can avoid starting the app defining "start: false" in `vars` section
 - name: Start the app at {{app_domain}}
   ansible.builtin.shell:
-    cmd: "docker compose up -d"
+    cmd: "{{dc}} up -d"
     chdir: "{{app_root}}"
   when: not app_start is defined or app_start is truthy  # start only when start: false is not a fact
   notify: "lokal : Restart router"

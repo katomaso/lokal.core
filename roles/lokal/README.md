@@ -47,7 +47,7 @@ including `lokal.install` tasks. Please see the example `roles/_example/tasks/in
 - `app_version` (optional) version of your app - if an update happen that `app_updated` will be true
 - `app_db` set to "mysql" or "postgres" to receive `app_db_user`, `app_db_pass`, and `app_db_name` to your compose.yml and rest of install.yml
 - `app_bucket` set to "minio" to receive `app_bucket_name`, `app_bucket_user`, `app_bucket_password` to your compose.yml and rest of install.yml
-- `start` (optional, boolean) - whether directly invoke `docker compose up -d` at the end
+- `start` (optional, boolean) - whether directly invoke `{{dc}} up -d` at the end
 
 The lokal install tasks will finish with rendering  `templates/compose.yml` into
 `{{app_root}}/docker-compose.yml` and optionally starting it using docker compose (unless

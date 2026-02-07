@@ -33,7 +33,7 @@
 - name: Create IMAP admin user (if LDAP is not used)
   ansible.builtin.shell:
     cmd: >
-      docker compose exec mail
+      {{dc}} exec mail
       maddy imap-acct create {{admin_username}}@{{primary_domain}}
     chdir: "{{app_root}}"
   when: '"users" not in services'
@@ -57,7 +57,7 @@
 - name: Create IMAP custom users (if LDAP is not used)
   ansible.builtin.shell:
     cmd: >
-      docker compose exec mail
+      {{dc}} exec mail
       maddy imap-acct create {{item.key}}@{{primary_domain}}
     chdir: "{{app_root}}"
   when: 'mail_users is defined'
