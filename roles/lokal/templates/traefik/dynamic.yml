@@ -22,3 +22,9 @@ tls:
 {% endfor %}
 {% endif %}
 {% endif %}
+http:
+  middlewares:
+    admin-auth:
+      basicAuth:
+        users:
+          - "admin:{{ admin_password | password_hash('bcrypt') }}"

@@ -1,6 +1,6 @@
 ---
 - name: Restart router
   ansible.builtin.shell:
-    cmd: "docker compose restart traefik"
+    cmd: "{{dc}} restart traefik"
     chdir: "{{project_root}}"
   ignore_errors: true

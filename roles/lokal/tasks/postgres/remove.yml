@@ -2,7 +2,7 @@
 - name: Remove {{app_db_name}} PostgreSQL database
   ansible.builtin.shell:
     cmd: >
-      docker compose exec postgres
+      {{dc}} exec postgres
       psql -c 'DROP DATABASE "{{app_db_name}}"' postgres postgres;
     chdir: "{{project_root}}"
   ignore_errors: true
@@ -10,7 +10,7 @@
 - name: Remove {{app_db_user}} PostgreSQL user
   ansible.builtin.shell:
     cmd: >
-      docker compose exec postgres
+      {{dc}} exec postgres
       psql -c 'DROP USER "{{app_db_user}}"' postgres postgres;
     chdir: "{{project_root}}"
   ignore_errors: true

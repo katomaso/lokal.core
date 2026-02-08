@@ -13,16 +13,22 @@
     - "{{project_root}}"
   when: "not backup is defined and not restore is defined"
 
+- name: "Render .env file"
+  ansible.builtin.template:
+    src: dotenv
+    dest: '{{project_root}}/.env'
+
 - name: Create app dirs
   ansible.builtin.file:
     path: '{{project_root}}/{{item}}'
     state: directory
   loop:
-    - logs
+    - logs/traefik
     - .certs
     - .dumper
     - fail2ban
-    - mysql
+    - mysql/data
+    - mysql/run
     - postgres
     - traefik/acme
     - traefik/conf
